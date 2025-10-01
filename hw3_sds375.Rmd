@@ -1,0 +1,99 @@
+---
+title: "Homework 3"
+author: "Ryann Liu"
+date: "2025-09-29"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+dataset <- read.csv("homework3_data.csv")
+
+library(colorfindr)
+library(magick)
+library(ggplot2)
+library(dplyr)
+```
+
+## My Recommendation
+I recommend that the company commit to redesigning the web site, as they would hae a higher success rate with a new design. 
+
+## Website Color Palette: Coca-Cola
+
+```{r}
+img <- "coke_web.png"
+coca_colors <- get_colors(img)
+make_palette(coca_colors[1:100, ])
+
+coca_palette <- c(
+  "CokeRed" = "#CC2B1D",
+  "White"      = "#EEEEEE",
+  "Gray"        = "#1A2230",
+  "AltRed"   = "#DF3021",
+  "Black"    = "#060606"
+)
+coca_palette
+```
+
+## Evidence
+The following graph shows the average sales per customer and items purchased for the old design and new design. As shown, both sales and items purchased increased for the new design, indicating the new design to be more succesful. 
+
+```{r}
+summary_df <- dataset %>%
+  group_by(design) %>%
+  summarise(
+    avg_sales = mean(sales),
+    avg_items = mean(items)
+  )
+
+# Plot average sales and items
+ggplot(summary_df, aes(x = factor(design))) +
+  geom_col(aes(y = avg_sales, fill = "Sales"), position = "dodge") +
+  geom_col(aes(y = avg_items * 10, fill = "Items"), position = "dodge") + 
+  scale_y_continuous(
+    name = "Average Sales ($)",
+    sec.axis = sec_axis(~./10, name = "Average Items")
+  ) +
+  scale_fill_manual(values = c("Sales" = "#1A2230", "Items" = "#CC2B1D")) +
+  labs(
+    x = "Website Design (0 = Old, 1 = New)",
+    title = "Average Sales and Items Purchased by Website Design"
+  ) +
+  theme_minimal()
+```
+
+This graph displays the distribution of Net Promoter Score, which reflects customer satisfaction and loyalty, for the old and new design. The distribution of scores for the new design is visibly greater, which shows that the redesign improved customer sentiment. 
+
+```{r}
+ggplot(dataset, aes(x = factor(design), y = nps, fill = factor(design))) +
+  geom_boxplot(alpha = 0.7, outlier.color = "#1A2230") +
+  scale_fill_manual(values = c("0" = "#EEEEEE", "1" = "#CC2B1D")) +
+  labs(
+    x = "Website Design (0 = Old, 1 = New)",
+    y = "Net Promoter Score (0–9)",
+    title = "Customer NPS Scores by Website Design"
+  ) +
+  theme_minimal()
+
+```
+
+Below I fit a regression model to show the average change in sales when switching from the old to the new design. Based on the calculated coefficients, the redesign increases sales by $2.51 per customer. This means that the redesign has a significant effect on sales. 
+The total increase in sales for all listed transactions is about $503.79. 
+
+```{r}
+model <- lm(sales ~ design + items, data = dataset)
+summary(model)
+avg_effect <- coef(model)["design"]
+
+# Projected total increase if all sales use redesign
+total_effect <- avg_effect * nrow(dataset)
+avg_effect
+total_effect
+```
+
+## Final Recommendation
+Based on my findings in both graphs, as well as my regression model, I recommend that the company should commit to redesigning the web site because there is a greater chance of success with the new design. Both graphs showed an increase in transactions as well as customer satisfaction, and the regression model showed a significant increase in sales per person. Therefore, it would be a good decision to continue with the redesign. 
+## Alternative Statement
+My alternative statement would be to abandon the redesign, because the redesign wouldn't have a significant effect on sales. 
